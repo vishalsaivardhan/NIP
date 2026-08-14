@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nip/core/config/app_theme.dart';
 import 'package:nip/core/constants/app_constants.dart';
+import 'package:nip/features/security/providers/security_providers.dart';
 
 class SecurityScreen extends ConsumerWidget {
   const SecurityScreen({super.key});
@@ -10,6 +11,19 @@ class SecurityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final identityAsync = ref.watch(deviceIdentityProvider);
+
+    final deviceIdentityLabel = identityAsync.when(
+      data: (id) => id.isEmpty ? 'Not Generated' : id.deviceId,
+      loading: () => 'Checking...',
+      error: (_, __) => 'Error loading',
+    );
+
+    final secureStorageLabel = identityAsync.when(
+      data: (id) => id.isEmpty ? 'Not initialized' : 'Encrypted keys loaded',
+      loading: () => 'Checking...',
+      error: (_, __) => 'Error',
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Security Dashboard')),
@@ -99,16 +113,18 @@ class SecurityScreen extends ConsumerWidget {
                   _SecurityRow(
                     icon: Icons.fingerprint_rounded,
                     label: 'Device Identity',
-                    value: 'Not Generated',
-                    status: false,
+                    value: deviceIdentityLabel,
+                    status:
+                        identityAsync.hasValue && !identityAsync.value!.isEmpty,
                     theme: theme,
                   ),
                   const Divider(height: 24),
                   _SecurityRow(
                     icon: Icons.key_rounded,
                     label: 'Secure Key Storage',
-                    value: 'Checking...',
-                    status: false,
+                    value: secureStorageLabel,
+                    status:
+                        identityAsync.hasValue && !identityAsync.value!.isEmpty,
                     theme: theme,
                   ),
                   const Divider(height: 24),

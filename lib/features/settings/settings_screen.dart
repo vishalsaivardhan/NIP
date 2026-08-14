@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:nip/core/constants/app_constants.dart';
+import 'package:nip/features/security/providers/security_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -31,12 +32,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showNodeTypeSelector(context),
           ),
-          ListTile(
-            leading: const Icon(Icons.fingerprint_rounded),
-            title: const Text('Device Identity'),
-            subtitle: const Text('Not generated'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () {},
+          Consumer(
+            builder: (context, ref, child) {
+              final identityAsync = ref.watch(deviceIdentityProvider);
+              final isGenerated =
+                  identityAsync.hasValue && !identityAsync.value!.isEmpty;
+              return ListTile(
+                leading: const Icon(Icons.fingerprint_rounded),
+                title: const Text('Device Identity'),
+                subtitle: Text(
+                  isGenerated
+                      ? 'Generated (${identityAsync.value!.deviceId})'
+                      : 'Not generated',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              );
+            },
           ),
 
           const Divider(),
